@@ -11,6 +11,8 @@ def abadata():
 
 @pytest.fixture
 def ws(abadata):
+    '''data_only=True means get the formula values, which we want
+    '''
     wb = load_workbook(filename=abadata)
     return wb.active
 
@@ -18,3 +20,10 @@ def ws(abadata):
 @pytest.fixture
 def peopledata():
     return f"{os.getcwd()}\\instance\\fbcok.csv"
+
+@pytest.fixture
+def ABA_Numbers(abadata):
+    '''
+    '''
+    wb = load_workbook(filename=abadata)
+    return wb['evaluated_ABA_Numbers']
