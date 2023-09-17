@@ -10,6 +10,12 @@ def abadata():
 
 
 @pytest.fixture
+def deposit_template():
+    return f"{os.getcwd()}\\Deposit_Ticket_Blank.xltx"
+
+
+
+@pytest.fixture
 def ws(abadata):
     '''data_only=True means get the formula values, which we want
     '''
@@ -27,3 +33,11 @@ def ABA_Numbers(abadata):
     '''
     wb = load_workbook(filename=abadata)
     return wb['evaluated_ABA_Numbers']
+
+@pytest.fixture
+def csv_cash_path():
+    return './instance/batch-299-cash.csv'
+
+@pytest.fixture
+def csv_check_path():
+    return './instance/batch-297-checks.csv'
