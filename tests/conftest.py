@@ -36,8 +36,8 @@ def ABA_Numbers(abadata):
 
 @pytest.fixture
 def csv_cash_path():
-    return './instance/batch-299-cash.csv'
+    return './instance/batch-301-cash.csv'
 
 @pytest.fixture
 def csv_check_path():
-    return './instance/batch-297-checks.csv'
+    return './instance/batch-300-checks.csv'

@@ -54,7 +54,7 @@ def get_check_rows(csv_check_path):
                            , row['check_number']
                            , row['net_amount']
                           ))
-    out.append(('','Check Totoal', total))
+    out.append(('','Check Total', total))
     return fixme, out, total
     
 
