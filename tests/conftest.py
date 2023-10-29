@@ -3,6 +3,13 @@ import os
 from openpyxl import load_workbook
 import pytest
 
+@pytest.fixture
+def csv_cash_path():
+    return './instance/batch-301-cash.csv'
+
+@pytest.fixture
+def csv_check_path():
+    return './instance/batch-300-checks.csv'
 
 @pytest.fixture
 def abadata():
@@ -34,10 +41,3 @@ def ABA_Numbers(abadata):
     wb = load_workbook(filename=abadata)
     return wb['evaluated_ABA_Numbers']
 
-@pytest.fixture
-def csv_cash_path():
-    return './instance/batch-301-cash.csv'
-
-@pytest.fixture
-def csv_check_path():
-    return './instance/batch-300-checks.csv'

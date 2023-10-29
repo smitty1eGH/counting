@@ -2,6 +2,14 @@
 
 Scripts for converting PlanningCenter batch .csv to .xlsx deposit
 
+The goal is to support having this script available on a computer with common access in a way that does not leak PII.
+
+Operation will be done by having data entries made on the PlanningCenter site, and then pulling down the batch files for processing.
+
+Future refinements: 
+A password-protected machine credential that could obtain the batch files and do the merge without saving anything locally.
+Move the ABA data into an .xlsx for easier maintenance
+
 ## Setup
 
 ### python
@@ -36,13 +44,18 @@ mkdir   tests
 ### instance/
 There is an instance/ directory in the repo and .gitignore that could contain PII, and are thus inappropriate for storage in the git repo proper.
 
-## running
-
-### pytest
-
-configtest.py declares fixtures for use in all test_*.py files
-
-> python -m pytest -s tests/ 
+# CONOPS
+## 0. Edit deposit_data.py to reflect
+- counters
+- cash received
+## 1. Do regular and cash batches in PlanningCenter
+## 2. Drop .csv exports regular and cash batches into instance/
+## 3. Run this script to merge: 
+###    3.1 cash: just summarize the amount and validate against the currency total
+###    3.2 checks: do a real merge
+###    3.3 (remove the cash/check .csv files)
+###    3.3 deposit_data--bag_number, counters, ABA
+###    3.4 Deposit_Ticket_Blank.xltx template
 
 
 ## notes

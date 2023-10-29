@@ -20,20 +20,28 @@ def set_cell_value(ws,wb,range_name,value):
 
 
 def prep_counters():
+    '''List of Counting Committee Members present
+    '''
     pres=filter(lambda x:x[1]==True,counters)
     return ', '.join([x[0] for x in pres])
 
 
-def check_cashrow(csv_cash_path):
+def validate_cashrow(csv_cash_path):
+    '''Sum the batch_XXX_cash.csv data
+    cash_total is at the top of the file
+    '''
     batch_total=0
     with open(csv_cash_path,'r') as data:
         for i,row in enumerate(csv.reader(data)):
             if i>0: 
                 batch_total += float(row[0][1:].replace(',',''))
     assert batch_total == cash_total
+    return cash_total
   
 
 def get_cash_block():
+    '''Cash lines on right side of the deposit
+    '''
     SPACER=''
     out=[(SPACER,k,v,k*v) for k,v in cash.items()]
     out.append((SPACER,SPACER,'Cash total',cash_total))
@@ -48,7 +56,7 @@ def get_check_rows(csv_check_path):
         for i,row in enumerate(csv.DictReader(data, fieldnames=flds)):
             if i>0:
                 if row['donor_id'] not in aba_data:
-                    fixme.add(row['donor_id'])
+                    fixme.add( row['donor_id'])
                 total += float(row['net_amount'][1:].replace(',',''))
                 out.append(( aba_data.get(row['donor_id'], f"FIX--{row['donor_id']}")
                            , row['check_number']
@@ -58,13 +66,13 @@ def get_check_rows(csv_check_path):
     return fixme, out, total
     
 
-@pytest.mark.skip    
+@pytest.mark.skip
 def test_check_cashrow(csv_cash_path):
-    check_cashrow(csv_cash_path)
+    validate_cashrow(csv_cash_path)
     print()
     print('\n'.join([str(x) for x in get_cash_block()]))
-    
 
+@pytest.mark.skip
 def test_get_check_row(csv_cash_path, csv_check_path, deposit_template):
             
     def gen_zrows(out,cashrows):
@@ -76,7 +84,7 @@ def test_get_check_row(csv_cash_path, csv_check_path, deposit_template):
         for row in zip_longest(out,cashrows):
             yield (*row[0], *maybe_row1(row[1]))
     
-    check_cashrow(csv_cash_path)
+    validate_cashrow(csv_cash_path)
     cashrows = get_cash_block()
     fixme, checkrows, check_total = get_check_rows(csv_check_path)
     
