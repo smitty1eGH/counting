@@ -52,9 +52,9 @@ def get_check_rows(csv_check_path):
                 if row['donor_id'] not in aba_data:
                     fixme.add( row['donor_id'])
                 total += float(row['amount'][1:].replace(',',''))
-                out.append(( aba_data.get(row['donor_id'], f"FIX--{row['donor_id']}")
-                           , row['check_number']
-                           , row['amount']
+                out.append(( aba_data.get(row['donor_id'    ], f"FIX--{row['donor_id']}")
+                           , int(         row['check_number'])
+                           , float(       row['amount'      ][1:].replace(',',''))
                           ))
     out.append(('','Check Total', total))
     return fixme, out, total
@@ -127,9 +127,9 @@ def write_deposit(csv_cash_path, csv_check_path, deposit_template):
     
     # 3.3
     set_cell_value(ws,wb,"bag_number"   ,bag_number)
-    set_cell_value(ws,wb,"counted_by"   ,counters)
-    set_cell_value(ws,wb,"total_deposit",cash_total+check_total)
-    set_cell_value(ws,wb,"item_count"   ,len(checkrows))
+    set_cell_value(ws,wb,"counted_by"   ,counters  )
+    set_cell_value(ws,wb,"total_deposit",float(cash_total+check_total))
+    set_cell_value(ws,wb,"item_count"   ,len(checkrows) -1)
     
     # 3.5
     for row in gen_zrows(checkrows,cashrows):
