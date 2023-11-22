@@ -8,6 +8,8 @@ from openpyxl.worksheet.cell_range import CellRange
 
 from deposit_data import bag_number, cash, aba_data, people
 
+MAX_CHECK_ROW=30
+
 # CONOPS
 # 0. Edit deposit_data.py to reflect
 #    - counters
@@ -15,8 +17,8 @@ from deposit_data import bag_number, cash, aba_data, people
 # 1. Do regular and cash batches in PlanningCenter
 # 2. Drop .csv exports regular and cash batches into instance/
 # 3. Run this script to merge: 
-#    3.1 cash: just summarize the amount and validate against the currency total
-#    3.2 checks: do a real merge
+#    3.1 checks: do a real merge
+#    3.2 cash: just summarize the amount and validate against the currency total
 #    3.3 (remove the cash/check .csv files)
 #    3.3 deposit_data--bag_number, counters, ABA
 #    3.4 Deposit_Ticket_Blank.xltx template
@@ -39,32 +41,42 @@ def set_cell_value(ws,wb,range_name,value):
 
 def get_check_rows(csv_check_path):
     '''This is where we pull in the checks .csv and build the 
-    left column of the data
+    left column of the data, as well as staging the data for the
+    overflow to the cash column.
     #flds=['donor_id','check_number','net_amount']
     '''
-    flds=['donor_id','donor_first_name','donor_last_name','donor_name_suffix','donor_email','check_number','amount']
+    flds =['donor_id'   ,'donor_first_name','donor_last_name','donor_name_suffix'
+          ,'donor_email','check_number'    ,'amount']
     fixme=set()
-    out=[]
+    out  =[]
     total=0.0
     with open(csv_check_path,'r') as data:
         for i,row in enumerate(csv.DictReader(data, fieldnames=flds)):
             if i>0:
                 if row['donor_id'] not in aba_data:
                     fixme.add( row['donor_id'])
-                total += float(row['amount'][1:].replace(',',''))
-                out.append(( aba_data.get(row['donor_id'    ], f"FIX--{row['donor_id']}")
-                           , int(         row['check_number'])
-                           , float(       row['amount'      ][1:].replace(',',''))
+                total += float(row['amount'][1:].replace(',', ''))
+                out.append((aba_data.get(row['donor_id'    ], f"FIX--{row['donor_id']}")
+                           ,int(         row['check_number'])
+                           ,float(       row['amount'      ][1:].replace(',',''))
                           ))
-    out.append(('','Check Total', total))
     return fixme, out, total
 
-def get_cash_block():
-    '''Cash lines on right side of the deposit
+def get_cash_block(checkrows, check_total):
+    '''Overflow check info, plus cash lines on right side of the deposit
     '''
-    SPACER=''
-    out=[(SPACER,k,v,k*v) for k,v in cash.items()]
-    out.append((SPACER,SPACER,'Cash total',cash_total))
+    SPACER = ''
+    out    = []
+    if len(checkrows) > MAX_CHECK_ROW:
+      out  = [(SPACER,*c) for c in checkrows[MAX_CHECK_ROW:]]
+      out.append((SPACER, SPACER       , SPACER, SPACER))
+      out.append((SPACER,'Denomination','Count','Total'))
+    for k,v in cash.items():
+      out.append((SPACER,k     , v             ,k*v        ))
+    out.append(  (SPACER,SPACER, SPACER        ,SPACER     ))
+    out.append(  (SPACER,SPACER,'Cash Total'   ,cash_total ))
+    out.append(  (SPACER,SPACER,'Check Total'  ,check_total))
+    out.append(  (SPACER,SPACER,'Total Deposit',check_total+cash_total))
     return out
 
 
@@ -99,7 +111,9 @@ def get_csv_paths():
     return csv_cash_path, csv_check_path
 
 def write_deposit(csv_cash_path, csv_check_path, deposit_template):
-            
+    '''
+    '''
+    
     def gen_zrows(out,cashrows):
         '''This lets us merge the left and right columns
         of the output from the check- and cash lists.
@@ -109,14 +123,16 @@ def write_deposit(csv_cash_path, csv_check_path, deposit_template):
                 return r1   
             else:
                 return ('',)
-        for row in zip_longest(out,cashrows):
+        for row in zip_longest(out[:MAX_CHECK_ROW],cashrows):
             yield (*row[0], *maybe_row1(row[1]))
+
     # 3.1
-    validate_cashrow(csv_cash_path)
-    cashrows = get_cash_block()
-    
-    # 3.2
     fixme, checkrows, check_total = get_check_rows(csv_check_path)
+
+    # 3.2
+    validate_cashrow(csv_cash_path)
+    cashrows = get_cash_block(checkrows, check_total)
+    
     
     # TODO:
     # 3.3

@@ -5,11 +5,11 @@ import pytest
 
 @pytest.fixture
 def csv_cash_path():
-    return './instance/batch-301-cash.csv'
+    return './instance/batch-323-cash.csv'
 
 @pytest.fixture
 def csv_check_path():
-    return './instance/batch-300-checks.csv'
+    return './instance/batch-322-checks.csv'
 
 @pytest.fixture
 def abadata():
