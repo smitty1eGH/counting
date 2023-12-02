@@ -9,6 +9,7 @@ from openpyxl.worksheet.cell_range import CellRange
 from deposit_data import bag_number, cash, aba_data, people
 
 MAX_CHECK_ROW=30
+SPACER = ''
 
 # CONOPS
 # 0. Edit deposit_data.py to reflect
@@ -60,23 +61,29 @@ def get_check_rows(csv_check_path):
                            ,int(         row['check_number'])
                            ,float(       row['amount'      ][1:].replace(',',''))
                           ))
+    if len(out) <= MAX_CHECK_ROW:
+        out.append((SPACER,'Check Total',total ))
+        out.append((SPACER,SPACER       ,SPACER))
     return fixme, out, total
 
 def get_cash_block(checkrows, check_total):
     '''Overflow check info, plus cash lines on right side of the deposit
     '''
-    SPACER = ''
     out    = []
     if len(checkrows) > MAX_CHECK_ROW:
-      out  = [(SPACER,*c) for c in checkrows[MAX_CHECK_ROW:]]
-      out.append((SPACER, SPACER       , SPACER, SPACER))
-      out.append((SPACER,'Denomination','Count','Total'))
+        out  = [(SPACER,*c) for c in checkrows[MAX_CHECK_ROW:]]
+        out.append((SPACER, SPACER       , SPACER, SPACER))
+        out.append((SPACER,'Denomination','Count','Total'))
+
     for k,v in cash.items():
-      out.append((SPACER,k     , v             ,k*v        ))
-    out.append(  (SPACER,SPACER, SPACER        ,SPACER     ))
-    out.append(  (SPACER,SPACER,'Cash Total'   ,cash_total ))
-    out.append(  (SPACER,SPACER,'Check Total'  ,check_total))
-    out.append(  (SPACER,SPACER,'Total Deposit',check_total+cash_total))
+        out.append((SPACER,k     , v             ,k*v        ))
+    out.append(    (SPACER,SPACER,'Cash Total',cash_total))
+    if len(checkrows) <= MAX_CHECK_ROW:
+        for p in range(len(checkrows)-len(cash)-4):
+            out.append((SPACER,SPACER,SPACER,SPACER))
+    out.append(    (SPACER,SPACER,'Cash Total'   ,cash_total ))
+    out.append(    (SPACER,SPACER,'Check Total'  ,check_total))
+    out.append(    (SPACER,SPACER,'Total Deposit',check_total+cash_total))
     return out
 
 
@@ -136,7 +143,6 @@ def write_deposit(csv_cash_path, csv_check_path, deposit_template):
     
     # TODO:
     # 3.3
-    
     wb          = load_workbook(deposit_template)
     wb.template = False
     ws          = wb.active
@@ -145,9 +151,10 @@ def write_deposit(csv_cash_path, csv_check_path, deposit_template):
     set_cell_value(ws,wb,"bag_number"   ,bag_number)
     set_cell_value(ws,wb,"counted_by"   ,counters  )
     set_cell_value(ws,wb,"total_deposit",float(cash_total+check_total))
-    set_cell_value(ws,wb,"item_count"   ,len(checkrows) -1)
+    set_cell_value(ws,wb,"item_count"   ,len(checkrows)-2)
     
     # 3.5
+    print(f'\n{len(checkrows)=}\n{len(cashrows)=}\n{checkrows=}\n{cashrows=}')
     for row in gen_zrows(checkrows,cashrows):
         ws.append(row)
         
